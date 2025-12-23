@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DEVICE=cuda
+      - BATCH_SIZE=32
+      - LEARNING_RATE=0.0001
+      - NUM_EPOCHS=10
+    volumes:
+      - ../data:/app/data
+      - ../experiments:/app/experiments
+    networks:
+      - document-classifier
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../experiments/mlflow:/mlflow
+    command: mlflow server --host 0.0.0.0 --backend-store-uri sqlite:///mlflow/mlflow.db --default-artifact-root /mlflow/artifacts
+    networks:
+      - document-classifier
+
+networks:
+  document-classifier:
+    driver: bridge
